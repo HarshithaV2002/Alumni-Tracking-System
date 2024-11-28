@@ -4,4 +4,4 @@
 
 2] To run the program enter { **node server/server.js** }
 
-3] And visit your [ **localhost/3000** ]
+3] And visit your [ **localhost:3000** ]

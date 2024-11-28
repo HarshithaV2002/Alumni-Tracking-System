@@ -15,7 +15,7 @@ const db = mysql.createConnection({
   host: 'Panda',
   user: 'Panda',
   password: 'panda',
-  database: 'alumini',
+  database: 'alumni_db',
 });
 
 db.connect(err => {
@@ -39,68 +39,20 @@ app.get('/api/alumni', (req, res) => {
   });
 });
 
-// API to add a new alumni
-app.post('/api/alumni', (req, res) => {
-  const { name, graduation_year, major, email } = req.body;
-  const insertQuery = `INSERT INTO alumni (name, graduation_year, major, email) VALUES (?, ?, ?, ?)`;
-  db.query(insertQuery, [name, graduation_year, major, email], (err, results) => {
-    if (err) throw err;
-    res.json({ message: 'Alumni added successfully' });
-  });
-});
-
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-// ... (previous code)
-
-// API to get a single alumni
-app.get('/api/alumni/:id', (req, res) => {
-  const alumniId = req.params.id;
-  db.query('SELECT * FROM alumni WHERE id = ?', [alumniId], (err, results) => {
-    if (err) throw err;
-    if (results.length === 1) {
-      res.json(results[0]);
-    } else {
-      res.status(404).json({ error: 'Alumni not found' });
-    }
-  });
+app.post('/api/login', passport.authenticate('userLocal', { session: false }), (req, res) => {
+  const token = jwt.sign({ id: req.user.id }, jwtOptions.secretOrKey);
+  res.json({ token });
 });
-
-// API to update an alumni
-app.put('/api/alumni/:id', (req, res) => {
-  const alumniId = req.params.id;
-  const { name, graduation_year, major, email } = req.body;
-  const updateQuery = `UPDATE alumni SET name = ?, graduation_year = ?, major = ?, email = ? WHERE id = ?`;
-  db.query(updateQuery, [name, graduation_year, major, email, alumniId], (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ message: 'An error occurred while updating the alumni' });
-      return;
-    }
-    res.json({ message: 'Alumni updated successfully' });
-  });
-});
-
-// API to delete an alumni
-app.delete('/api/alumni/:id', (req, res) => {
-  const alumniId = req.params.id;
-  const deleteQuery = 'DELETE FROM alumni WHERE id = ?';
-  db.query(deleteQuery, [alumniId], (err, results) => {
-    if (err) throw err;
-    res.json({ message: 'Alumni deleted successfully' });
-  });
-});
-
-// ... (rest of the code)
-// ... (existing code)
 
 // Passport configuration
 passport.use(
   'userLocal',
   new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-    db.query('SELECT * FROM users WHERE username = ?', [email], (err, results) => {
+    db.query('SELECT * FROM admin WHERE Admin_id = ? OR Inst_id = ?', [email, email], (err, results) => {
       if (err) return done(err);
 
       if (results.length === 0) {
@@ -108,10 +60,14 @@ passport.use(
       }
 
       const user = results[0];
+      if (!user.password) {
+        console.log('User has no password:', user);
+        return done(null, false, { message: 'Incorrect email or password' });
+      }
 
       bcrypt.compare(password, user.password, (err, isMatch) => {
         if (err) return done(err);
-
+        
         if (isMatch) {
           return done(null, user);
         } else {
@@ -122,10 +78,11 @@ passport.use(
   })
 );
 
+
 passport.use(
   'alumniLocal',
   new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-    db.query('SELECT * FROM alumnio WHERE username = ? OR mail = ?', [email, email], (err, results) => {
+    db.query('SELECT * FROM user WHERE user_id = ? OR email = ?', [email, email], (err, results) => {
       if (err) return done(err);
 
       if (results.length === 0) {
@@ -157,46 +114,149 @@ const jwtOptions = {
 };
 // ... (existing code)
 
-// API to login
-app.post('/api/login', passport.authenticate('userLocal', { session: false }), (req, res) => {
-  const token = jwt.sign({ id: req.user.id }, jwtOptions.secretOrKey);
-  res.json({ token });
-});
 
+// API to Alumni login
 app.post('/api/alumnilogin', passport.authenticate('alumniLocal', { session: false }), (req, res) => {
   const token = jwt.sign({ id: req.user.id }, jwtOptions.secretOrKey);
   res.json({ token });
 });
 
-// ... (existing code)
-
-// ... (existing code)
-// API to get current user (requires authentication)
-
-
-// ... (existing code)
-
-// Serve the dashboard page
-
-
-
-// ... (existing code)
 // API to register a new user
 app.post('/api/register', (req, res) => {
-  const { username, mail, password } = req.body;
+  const { username, name, email, password } = req.body;
 
   // Hash the password before storing it
   bcrypt.hash(password, 10, (err, hash) => {
     if (err) throw err;
 
-    const insertQuery = `INSERT INTO alumnio (username, mail ,password) VALUES (?, ?, ?)`;
-    db.query(insertQuery, [username, mail, hash], (err, results) => {
+    const insertQuery = `INSERT INTO user (user_id, name, email ,password) VALUES (?, ?, ?, ?)`;
+    db.query(insertQuery, [username, name, email, hash], (err, results) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ message: 'An error occurred during registration', error: err });
+      } else {
+        console.log('You have successfully registered');
+        res.json({ message: 'You have successfully registered' });
+      }
+    })
+})});
+
+// API to register a new admin
+app.post('/api/adminregister', (req, res) => {
+  const { username, name, instid, phnum, email, notify, password } = req.body;
+
+  // Hash the password before storing it
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) throw err;
+
+    const insertQuery = 'INSERT INTO admin (Admin_id, name, Inst_id, Email, verifier, notifications, password) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    db.query(insertQuery, [username, name, instid, phnum, email, notify, hash], (err) => {
       if (err) {
         res.status(500).json({ message: 'An error occurred during registration' });
       } else {
         console.log('You have successfully registered');
         res.json({ message: 'You have successfully registered' });
-      }})
-    })});
+      }
+    });
+  });
+});
 
-   
+
+// API to store alumni details
+app.post('/submitForm', (req, res) => {
+  const {
+    first_name,
+    last_name,
+    dob,
+    mother,
+    father,
+    phone,
+    instid,
+    address,
+    usn,
+    grad,
+    tc,
+    mode,
+    admd,
+    Course,
+  } = req.body;
+
+  const user_id = 'm_panda_f';
+  const verification_status = 'pending';
+
+  const sql = `
+    INSERT INTO ALUMNI (user_id, Name, dob, mothername, fathername, phone, Inst_id, address, USN, graduation_date,  TC_received, course, admission_mode, admission_date, verification_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [
+    user_id,
+    first_name + ' ' + last_name,
+    dob,
+    mother,
+    father,
+    phone,
+    instid,
+    address,
+    usn,
+    grad,
+    tc,
+    Course,
+    mode,
+    admd,
+    verification_status
+  ], (err, result) => {
+    if (err) {
+      console.error('Error executing query: ' + err.stack);
+      res.status(500).send(`Internal Server Error: ${err.message}`);
+      return;
+    }
+
+    console.log('Record inserted successfully');
+    res.status(200).json({ message: 'Record inserted successfully' });
+  });
+});
+
+
+app.get('/api/admin', (req, res) => {
+  // Use the pool to execute a query
+  db.query(`SELECT * FROM admin`, (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+app.delete('/api/alumni/:id', (req, res) => {
+  const id = req.params.id;
+
+  const query = 'DELETE FROM user WHERE user_id = ?';
+
+  db.query(query, id, (error, results) => {
+    if (error) {
+      res.status(500).send({ message: 'An error occurred while trying to delete the alumni record.' });
+    } else if (results.affectedRows === 0) {
+      res.status(404).send({ message: 'Alumni not found.' });
+    } else {
+      res.status(200).send({ message: 'Alumni deleted successfully.' });
+    }
+  });
+});
+
+//verifu alumni
+app.post('/verify-alumni/:id', (req, res) => {
+  const alumniId = req.params.id; // Fixed here
+
+  // Execute the SQL query to update verification_status
+  db.query('UPDATE alumni SET verification_status = ? WHERE user_id = ?', ['verified', alumniId], (error, results) => {
+    if (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      res.status(200).json({ message: 'Alumni verified successfully' });
+    }
+  });
+});

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumni and Admission Details</title>
+
+    <link rel="stylesheet" href="css/alumnidash.css">
+    <link rel="stylesheet" href="css/style.css"
+    <script src="js/script.js"></script>
+</head>
+<body>
+    <<section id="ad">
+        <div id="projects">
+          <div id="title"><div>DETAILS</div><p>ALUMNI</p></div>
+          <div id="proj">
+        <table id="data-table" class="table">
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Date of Birth</th>
+              <th>Mother Name</th>
+             
+              <th>Institute</th>
+              <th>Admission Mode</th>
+              <th>USN</th>
+              <th>Graduation Year</th>
+              <th>Verification</th>
+              <!-- Add more headers as needed -->
+            </tr>
+        </table>
+      </div>
+      </div>
+      </section>
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          // Replace 'your_table_name' with the actual table name
+      
+          // Make a fetch request to the Node.js server
+          fetch(`/tableData/admin`)
+            .then(response => response.json())
+            .then(data => {
+              // Display the fetched data
+              displayTableoData(data);
+            })
+            .catch(error => {
+              console.error('Error fetching data:', error);
+            });
+        });
+      
+        function displayTableoData(data) {
+          const table = document.getElementById('user-table');
+         
+          table.style.border = '1px solid black';
+          // Check if data is not empty
+          if (data.length > 0) {
+            // Add rows to the table
+            data.forEach(row => {
+              const rowElement = document.createElement('tr');
+              rowElement.style.textAlign = 'center';
+             
+              for (const key in row) {
+                const td = document.createElement('td');
+                td.textContent = row[key];
+                rowElement.appendChild(td);
+              }
+              
+            });
+          } else {
+            // Display a message if there is no data
+            tbody.textContent = 'No data available.';
+          }
+        }
+      </script>
+</body>
+</html>
+
