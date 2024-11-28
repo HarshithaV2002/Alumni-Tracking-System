@@ -1,17 +1,24 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-**Alumni Tracking System**  
+The Alumni Tracking System is a web-based application designed to streamline the management and tracking of alumni data. Leveraging technologies such as Node.js,  MySQL and this system provides a user-friendly interface for administrators to securely manage alumni records. With features like authentication, file uploading,.
 
-1] Change the SQL user name password and Also change the Database name to the Database name you use on your system.
+Follow these steps to set up and run the program:
+1)Configure the Database
+   i)Navigate to server/config/db.config.js.
+   ii)Update the SQL credentials (username, password, and database name) to match your MySQL database configuration.
 
-2] To run the program enter { **node server/server.js** }
+2)Install Dependencies
+Open your terminal, navigate to the project directory, and install the required dependencies:
+- npm install
 
-3] And visit your [ **localhost:3000** ]
-=======
-# Alumni-Tracking-System
-The Alumni Tracking System is a web-based application designed to streamline the management and tracking of alumni data. 
->>>>>>> 04488e9308bcde5837f4ea09cd199cfa5fc6e3a2
-=======
-# Alumni-Tracking-System
-The Alumni Tracking System is a web-based application designed to streamline the management and tracking of alumni data. 
->>>>>>> 7c8a85e6886c32df9e92802abb69d4f25f9d390a
+3)Run the Server
+Start the server using the following command:
+-node server.js
+
+4)Access the Application
+Once the server is running, open your web browser and go to:
+-http://localhost:3000
+
+
+
+Contributing
+
+Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
